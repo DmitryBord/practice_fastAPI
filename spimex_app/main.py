@@ -1,7 +1,8 @@
 from concurrent.futures import ProcessPoolExecutor
 
 import asyncio
-import aiohttp
+
+import curl_cffi
 
 from time import time
 
@@ -20,7 +21,7 @@ async def main():
     await create_table()
 
     with ProcessPoolExecutor() as pool:
-        async with aiohttp.ClientSession() as session:
+        async with curl_cffi.requests.AsyncSession() as session:
             pipline = Pipeline(
                 downloader_pdf=Container.get_pdf_downloader(),
                 downloader_xls=Container.get_xls_downloader(),

@@ -1,11 +1,17 @@
-import asyncio
-import aiohttp
+import curl_cffi
+from curl_cffi.requests.errors import RequestsError
+
 from bs4 import BeautifulSoup
+
 from .filtres import tag_filter, compare_date
-import logging
+
 from datetime import date
+
 from tenacity import retry, wait_exponential, retry_if_exception_type, stop_after_attempt, before_sleep_log
+
 from typing import AsyncGenerator
+
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -21,18 +27,23 @@ def error_callback(retry_state):
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
+    # retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
+    retry=retry_if_exception_type(RequestsError),
     retry_error_callback=error_callback,
     before_sleep=before_sleep_log(logger, logging.INFO)
 )
-async def get_html(url: str, session: aiohttp.ClientSession):
-    async with session.get(url, timeout=aiohttp.ClientTimeout(10)) as response:
-        response.raise_for_status()
-        return await response.text()
+async def get_html(url: str, session: curl_cffi.requests.AsyncSession):
+    # async with session.get(url, timeout=10) as response:
+    #     response.raise_for_status()
+    #     return response.text()
+
+    response = await session.get(url, timeout=10, impersonate="chrome120")
+    response.raise_for_status()
+    return response.text
 
 
 async def parse_links(
-        session: aiohttp.ClientSession, last_date: date
+        session: curl_cffi.requests.AsyncSession, last_date: date
 ) -> AsyncGenerator[tuple[list[str], list[str]], None]:
     for count in range(1, 84):
         links_pdf: list[str] = []
@@ -59,6 +70,7 @@ async def parse_links(
 
             if last_date is not None:
                 if not compare_date(link, last_date):
+                    yield links_pdf, links_xls
                     return
 
             if link_tag_pdf and "href" in link_tag_pdf.attrs:

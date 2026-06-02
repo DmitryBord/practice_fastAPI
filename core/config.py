@@ -1,14 +1,12 @@
-import os
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class Settings(BaseSettings):
+    db_name: str
+    db_host: str
+    db_port: int
+    db_user: str
+    db_pass: str
 
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-load_dotenv()
-
-DB_NAME = os.getenv("DB_NAME")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_USER = os.getenv("DB_USER")
-DB_PASS = os.getenv("DB_PASS")

@@ -1,9 +1,9 @@
 import asyncio
-import logging
+
 from concurrent.futures import ProcessPoolExecutor
 from datetime import date
 
-import aiohttp
+import curl_cffi
 
 from core.db_utils import get_last_date_from_DB
 from spimex_app.extract.downloader import Downloader
@@ -24,7 +24,7 @@ class Pipeline:
 
     async def download(
             self,
-            session: aiohttp.ClientSession,
+            session: curl_cffi.requests.AsyncSession,
             links_pdf: list[str],
             links_xls: list[str],
     ) -> tuple[list[str], list[str]]:
@@ -36,7 +36,7 @@ class Pipeline:
 
         return pdf_files, xls_files
 
-    async def run(self, pool: ProcessPoolExecutor, session: aiohttp.ClientSession):
+    async def run(self, pool: ProcessPoolExecutor, session: curl_cffi.requests.AsyncSession):
         last_date: date | None = await get_last_date_from_DB()
 
         async for links_pdf, links_xls in parse_links(session, last_date):
@@ -58,6 +58,7 @@ class Pipeline:
                 page_data.extend(data)
 
             if not page_data:
+                logger.info("Новых данных нет")
                 continue
 
             logging.info("Подаю данные в БД")

@@ -1,5 +1,5 @@
-from pathlib import Path
+from datetime import datetime
+from datetime import date
 
-path = Path(__file__).resolve().parent
+print(date.today())
 
-print(path/"tmp/file.txt")

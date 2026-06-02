@@ -8,8 +8,8 @@ from tenacity import (
 import uuid
 import os
 import aiofiles
-import aiohttp
-import asyncio
+import curl_cffi
+from curl_cffi.requests.errors import RequestsError
 import logging
 
 
@@ -37,22 +37,20 @@ class Downloader:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
+        # retry=retry_if_exception_type((aiohttp.ClientError, asyncio.TimeoutError)),
+        retry=retry_if_exception_type(RequestsError),
         retry_error_callback=error_callback,
         before_sleep=before_sleep_log(logger, logging.INFO),
     )
-    async def download(self, session: aiohttp.ClientSession, link: str) -> str:
-        async with session.get(link, timeout=aiohttp.ClientTimeout(10)) as response:
-            response.raise_for_status()
-            rand_id = uuid.uuid4().hex[:8]
+    async def download(self, session: curl_cffi.requests.AsyncSession, link: str) -> str:
+        response = await session.get(link, timeout=10, impersonate="chrome120")
+        response.raise_for_status()
+        rand_id = uuid.uuid4().hex[:8]
+        file_path = f"{self.file_path}/{rand_id}.{self.file_type}"
 
-            async with aiofiles.open(
-                f"{self.file_path}/{rand_id}.{self.file_type}", "wb"
-            ) as f:
-                async for chunk in response.content.iter_any():
-                    await f.write(chunk)
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(response.content)
 
-            file_path = f"{self.file_path}/{rand_id}.{self.file_type}"
-            logger.info(f"Скачал файл {file_path}")
+        logger.info(f"Скачал файл {file_path}")
 
-            return file_path
+        return file_path
