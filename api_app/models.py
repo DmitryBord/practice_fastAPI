@@ -33,8 +33,6 @@ class SpimexTradingResults(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-
-
     __table_args__ = (
         UniqueConstraint(
             "exchange_product_id",

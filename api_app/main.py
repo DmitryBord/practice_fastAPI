@@ -5,8 +5,9 @@ from fastapi import FastAPI, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from api_app.schemas import SpimexTradingResultsGet
-from api_app.validators import validate_dates, DatesQueryParams
+from .schemas import SpimexTradingResultsGet
+from .dependencies import DatesQueryParams, validate_dates
+
 
 from core.models import SpimexTradingResults
 from core.init_db import create_table
@@ -81,16 +82,6 @@ async def get_dynamics(
 
     results = await session.execute(stmt)
     return results.scalars().all()
-
-
-# @app.get("/spimex/trading-results", response_model=SpimexTradingResultsGet)
-# async def get_trading_results(
-#         oil_id: str | None = None,
-#         delivery_type_id: str | None = None,
-#         delivery_basis_id: str | None = None,
-#         session: AsyncSession = Depends(get_session)
-# ):
-#     pass
 
 
 if __name__ == '__main__':

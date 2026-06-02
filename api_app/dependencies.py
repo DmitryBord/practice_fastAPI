@@ -1,7 +1,8 @@
 from datetime import date
+
+from fastapi import Depends, HTTPException
 from pydantic import BaseModel, Field
-from pydantic_core import PydanticCustomError
-from fastapi import Depends, HTTPException, status
+from starlette import status
 
 
 class DatesQueryParams(BaseModel):
