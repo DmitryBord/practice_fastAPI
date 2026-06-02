@@ -7,9 +7,9 @@ from sqlalchemy import select
 
 from .schemas import SpimexTradingResultsGet
 from .dependencies import DatesQueryParams, validate_dates
+from .services import get_dynamics
 
-
-from core.models import SpimexTradingResults
+from .models import SpimexTradingResults
 from core.init_db import create_table
 from core.database import get_session
 
@@ -48,7 +48,7 @@ async def get_last_trading_dates(
 
 # TODO: Обработать краевые случаи
 @app.get("/spimex/trading-results", response_model=list[SpimexTradingResultsGet])
-async def get_dynamics(
+async def get_trading_results(
         dates: DatesQueryParams = Depends(validate_dates),
         oil_id: Annotated[str | None, Query(description="for example ('A106')", max_length=4)] = None,
         delivery_type_id: Annotated[str | None, Query(description="for example ('A')", max_length=1)] = None,
@@ -57,31 +57,8 @@ async def get_dynamics(
         AsyncSession = Depends(get_session)
 ):
 
-    stmt = (
-        select(SpimexTradingResults)
-        .where(SpimexTradingResults.date >= dates.start_date, SpimexTradingResults.date <= dates.end_date)
-    )
-
-    if oil_id:
-        oil_id = oil_id.upper()
-        stmt = stmt.where(SpimexTradingResults.oil_id == oil_id)
-
-    if delivery_type_id:
-        delivery_type_id = delivery_type_id.upper()
-        stmt = stmt.where(SpimexTradingResults.delivery_type_id == delivery_type_id)
-
-    if delivery_basis_id:
-        delivery_basis_id = delivery_basis_id.upper()
-        stmt = stmt.where(SpimexTradingResults.delivery_basis_id == delivery_basis_id)
-
-    stmt = stmt.order_by(
-            SpimexTradingResults.oil_id,
-            SpimexTradingResults.delivery_type_id,
-            SpimexTradingResults.delivery_basis_id
-        )
-
-    results = await session.execute(stmt)
-    return results.scalars().all()
+    if not dates.is_none():
+        return await get_dynamics(session, dates, oil_id, delivery_type_id, delivery_basis_id)
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import async_engine
 from core.init_db import logger
-from core.models import SpimexTradingResults
+from api_app.models import SpimexTradingResults
 
 
 async def get_last_date_from_DB():
