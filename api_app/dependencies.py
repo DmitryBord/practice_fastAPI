@@ -1,8 +1,26 @@
 from datetime import date
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from starlette import status
+
+from typing import Annotated
+
+
+class PaginationTradingResult:
+    def __init__(
+            self,
+            offset: Annotated[int, Query(ge=0)] = 0,
+            limit: Annotated[int, Query(ge=0, le=100)] = 5
+    ):
+        self.offset = offset
+        self.limit = limit
+
+
+class TradingResultParam(BaseModel):
+    oil_id: str | None = Field(default=None, description="for example ('A106')", max_length=4)
+    delivery_type_id: str | None = Field(default=None, description="for example ('A')", max_length=1)
+    delivery_basis_id: str | None = Field(default=None, description="for example ('NPT')", max_length=3)
 
 
 class DatesQueryParams(BaseModel):

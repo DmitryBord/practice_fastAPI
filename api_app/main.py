@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from .schemas import SpimexTradingResultsGet
-from .dependencies import DatesQueryParams, validate_dates
-from .services import get_dynamics
+from .dependencies import DatesQueryParams, validate_dates, TradingResultParam, PaginationTradingResult
+from .services import get_latest_trading_results
 
 from .models import SpimexTradingResults
 from core.init_db import create_table
@@ -49,16 +49,12 @@ async def get_last_trading_dates(
 # TODO: Обработать краевые случаи
 @app.get("/spimex/trading-results", response_model=list[SpimexTradingResultsGet])
 async def get_trading_results(
-        dates: DatesQueryParams = Depends(validate_dates),
-        oil_id: Annotated[str | None, Query(description="for example ('A106')", max_length=4)] = None,
-        delivery_type_id: Annotated[str | None, Query(description="for example ('A')", max_length=1)] = None,
-        delivery_basis_id: Annotated[str | None, Query(description="for example ('NPT')", max_length=3)] = None,
-        session:
-        AsyncSession = Depends(get_session)
+        dates: Annotated[DatesQueryParams, Depends(validate_dates)],
+        query_params: Annotated[TradingResultParam, Depends(TradingResultParam)],
+        pagination: Annotated[PaginationTradingResult, Depends(PaginationTradingResult)],
+        session: Annotated[AsyncSession, Depends(get_session)]
 ):
-
-    if not dates.is_none():
-        return await get_dynamics(session, dates, oil_id, delivery_type_id, delivery_basis_id)
+    return await get_latest_trading_results(session, dates, query_params, pagination)
 
 
 if __name__ == '__main__':

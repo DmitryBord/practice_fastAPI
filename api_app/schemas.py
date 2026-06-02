@@ -20,7 +20,7 @@ class SpimexTradingResultsGet(BaseModel):
 
     @field_serializer("total", when_used="json")
     def total_serializer(self, value: Decimal):
-        return str(value)
+        return f"{value.normalize():f}"
 
 
 

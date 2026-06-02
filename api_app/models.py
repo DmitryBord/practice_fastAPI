@@ -24,7 +24,7 @@ class SpimexTradingResults(Base):
     volume: Mapped[int]
     total: Mapped[numeric_price]
     count: Mapped[int]
-    date: Mapped[date] = mapped_column(Date)
+    date: Mapped[date] = mapped_column(Date, index=True)
 
     created_on: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
