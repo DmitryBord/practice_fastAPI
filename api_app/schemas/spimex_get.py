@@ -1,10 +1,13 @@
-from pydantic import BaseModel, Field, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, field_serializer
 from datetime import date
 from decimal import Decimal
 
 
-class SpimexTradingResultsGet(BaseModel):
+class SpimexTradingDatesGet(BaseModel):
+    list_dates: list[date]
 
+
+class SpimexTradingResultsGet(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     exchange_product_id: str
@@ -21,6 +24,3 @@ class SpimexTradingResultsGet(BaseModel):
     @field_serializer("total", when_used="json")
     def total_serializer(self, value: Decimal):
         return f"{value.normalize():f}"
-
-
-

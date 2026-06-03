@@ -1,17 +1,10 @@
-from datetime import date
-
 from fastapi import FastAPI, Depends, Query
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from .schemas.spimex_get import SpimexTradingResultsGet, SpimexTradingDatesGet
+from .dependencies import DatesQueryParams, validate_dates, TradingResultParams, PaginationTradingResult
+from .services import SpimexTradingService
 
-from .schemas import SpimexTradingResultsGet
-from .dependencies import DatesQueryParams, validate_dates, TradingResultParam, PaginationTradingResult
-from .services import get_latest_trading_results
-
-from .models import SpimexTradingResults
 from core.init_db import create_table
-from core.database import get_session
 
 from contextlib import asynccontextmanager
 
@@ -30,31 +23,26 @@ app = FastAPI(lifespan=lifespan)
 
 
 # TODO: Обработать краевые случаи
-@app.get("/spimex/trading-results/dates/", response_model=dict[str, list[date]])
+@app.get("/spimex/trading-results/dates/", response_model=SpimexTradingDatesGet)
 async def get_last_trading_dates(
         count_days: Annotated[int, Query(gt=0)] = 1,
-        session: AsyncSession = Depends(get_session)
+        service: SpimexTradingService = Depends(SpimexTradingService)
 ):
-    stmt = (
-        select(SpimexTradingResults.date)
-        .distinct()
-        .order_by(SpimexTradingResults.date.desc())
-        .limit(count_days)
-    )
-    results = await session.execute(stmt)
-    dates = results.scalars().all()
-    return {"list_dates": dates}
+    result = await service.get_last_trading_dates(count_days=count_days)
+    return result
 
 
 # TODO: Обработать краевые случаи
 @app.get("/spimex/trading-results", response_model=list[SpimexTradingResultsGet])
 async def get_trading_results(
+        # TODO: Разобраться зависимостями
         dates: Annotated[DatesQueryParams, Depends(validate_dates)],
-        query_params: Annotated[TradingResultParam, Depends(TradingResultParam)],
+        query_params: Annotated[TradingResultParams, Query()],
         pagination: Annotated[PaginationTradingResult, Depends(PaginationTradingResult)],
-        session: Annotated[AsyncSession, Depends(get_session)]
+        service: Annotated[SpimexTradingService, Depends(SpimexTradingService)]
 ):
-    return await get_latest_trading_results(session, dates, query_params, pagination)
+    result = await service.get_trading_results(dates, query_params, pagination)
+    return result
 
 
 if __name__ == '__main__':

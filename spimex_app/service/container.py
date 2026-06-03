@@ -1,6 +1,6 @@
 from spimex_app.extract.downloader import Downloader
 from spimex_app.load.loaders import PostgresLoader
-from api_app.models import SpimexTradingResults
+from api_app.models.spimex_trading import SpimexTradingResults
 from pathlib import Path
 
 

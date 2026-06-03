@@ -1,6 +1,5 @@
 from sqlalchemy.dialects.postgresql import insert
-from core.database import async_engine, AsyncSessionLocal
-from api_app.models import Base
+from core.database import async_engine, AsyncSessionLocal, Base
 from typing import Type
 
 

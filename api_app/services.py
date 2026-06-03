@@ -1,39 +1,30 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .dependencies import DatesQueryParams, TradingResultParam, PaginationTradingResult
-from .models import SpimexTradingResults
-from .schemas import SpimexTradingResultsGet
+from .dependencies import DatesQueryParams, TradingResultParams, PaginationTradingResult
+from .models.spimex_trading import SpimexTradingResults
 
 
-async def get_latest_trading_results(
-        session: AsyncSession,
-        dates: DatesQueryParams,
-        query_params: TradingResultParam,
-        pagination: PaginationTradingResult
-) -> list[SpimexTradingResultsGet]:
+from .repoositories.spimex_repo import SpimexRepository
+from fastapi import Depends
+from core.database import get_session
+from datetime import date
 
-    stmt = (
-        select(SpimexTradingResults)
-        .order_by(SpimexTradingResults.date.desc())
-    )
 
-    if not dates.is_none():
-        stmt = stmt.where(SpimexTradingResults.date >= dates.start_date, SpimexTradingResults.date <= dates.end_date)
+class SpimexTradingService:
+    def __init__(self, session: AsyncSession = Depends(get_session)):
+        self.spimex_repo = SpimexRepository(session=session)
 
-    if query_params.oil_id:
-        oil_id = query_params.oil_id.upper()
-        stmt = stmt.where(SpimexTradingResults.oil_id == oil_id)
+    async def get_last_trading_dates(self, count_days: int) -> dict[str, list[date]]:
 
-    if query_params.delivery_type_id:
-        delivery_type_id = query_params.delivery_type_id.upper()
-        stmt = stmt.where(SpimexTradingResults.delivery_type_id == delivery_type_id)
+        dates: list[date] = await self.spimex_repo.get_dates(count_days)
+        return {"list_dates": dates}
 
-    if query_params.delivery_basis_id:
-        delivery_basis_id = query_params.delivery_basis_id.upper()
-        stmt = stmt.where(SpimexTradingResults.delivery_basis_id == delivery_basis_id)
+    async def get_trading_results(
+            self,
+            dates: DatesQueryParams,
+            params: TradingResultParams,
+            pagination: PaginationTradingResult
+    ) -> list[SpimexTradingResults]:
 
-    stmt = stmt.offset(pagination.offset).limit(pagination.limit)
-
-    results = await session.execute(stmt)
-    return results.scalars().all()
+        result = await self.spimex_repo.get_list(dates, params, pagination)
+        return result

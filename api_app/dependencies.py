@@ -7,17 +7,12 @@ from starlette import status
 from typing import Annotated
 
 
-class PaginationTradingResult:
-    def __init__(
-            self,
-            offset: Annotated[int, Query(ge=0)] = 0,
-            limit: Annotated[int, Query(ge=0, le=100)] = 5
-    ):
-        self.offset = offset
-        self.limit = limit
+class PaginationTradingResult(BaseModel):
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=5, gt=0, lt=100)
 
 
-class TradingResultParam(BaseModel):
+class TradingResultParams(BaseModel):
     oil_id: str | None = Field(default=None, description="for example ('A106')", max_length=4)
     delivery_type_id: str | None = Field(default=None, description="for example ('A')", max_length=1)
     delivery_basis_id: str | None = Field(default=None, description="for example ('NPT')", max_length=3)
@@ -32,7 +27,7 @@ class DatesQueryParams(BaseModel):
             return True
 
 
-def validate_dates(dates: DatesQueryParams = Depends(DatesQueryParams)) -> DatesQueryParams:
+def validate_dates(dates: Annotated[DatesQueryParams, Depends()]) -> DatesQueryParams:
     if dates.is_none():
         return dates
 

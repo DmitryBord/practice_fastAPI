@@ -1,8 +1,8 @@
-from api_app.models import SpimexTradingResults
+from api_app.models.spimex_trading import SpimexTradingResults
 from core.database import async_engine
 import logging
 
-from api_app.models import Base
+from api_app.models.spimex_trading import Base
 
 logger = logging.getLogger(__name__)
 

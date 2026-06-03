@@ -1,14 +1,12 @@
 from decimal import Decimal
 from datetime import datetime, date
 from sqlalchemy import String, Numeric, DateTime, Date, func, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column
 from typing import Annotated
 
+from core.database import Base
+
 numeric_price = Annotated[Decimal, Numeric(15, 2)]
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 class SpimexTradingResults(Base):
