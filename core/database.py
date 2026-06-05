@@ -2,14 +2,12 @@ from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
-from core.config import Settings
+from core.config import settings
 
 
 class Base(DeclarativeBase):
     pass
 
-
-settings = Settings()
 
 DATABASE_URL = URL.create(
     drivername="postgresql+asyncpg",

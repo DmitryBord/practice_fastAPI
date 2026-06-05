@@ -1,8 +1,13 @@
 from datetime import date
-from core.database import AsyncSession
 from sqlalchemy import select
-from ..models.spimex_trading import SpimexTradingResults
-from ..dependencies import DatesQueryParams, TradingResultParams, PaginationTradingResult
+
+from core.database import AsyncSession
+from api_app.models.spimex_trading import SpimexTradingResults
+from api_app.dependencies import (
+    DatesQueryParams,
+    TradingResultParams,
+    PaginationTradingResult,
+)
 
 
 class SpimexRepository:
@@ -23,21 +28,19 @@ class SpimexRepository:
         return list(dates)
 
     async def get_list(
-            self,
-            dates: DatesQueryParams,
-            params: TradingResultParams,
-            pagination: PaginationTradingResult
+        self,
+        params: TradingResultParams,
+        dates: DatesQueryParams | None = None,
+        pagination: PaginationTradingResult | None = None,
     ) -> list[SpimexTradingResults]:
 
-        # TODO: Решить что делать с пагинацией
-        stmt = (
-            select(SpimexTradingResults)
-            .order_by(SpimexTradingResults.date.desc())
-        )
+        stmt = select(SpimexTradingResults).order_by(SpimexTradingResults.date.desc())
 
-        if not dates.is_none():
-            stmt = stmt.where(SpimexTradingResults.date >= dates.start_date,
-                              SpimexTradingResults.date <= dates.end_date)
+        if dates is not None:
+            stmt = stmt.where(
+                SpimexTradingResults.date >= dates.start_date,
+                SpimexTradingResults.date <= dates.end_date,
+            )
 
         if params.oil_id:
             oil_id = params.oil_id.upper()
@@ -49,9 +52,13 @@ class SpimexRepository:
 
         if params.delivery_basis_id:
             delivery_basis_id = params.delivery_basis_id.upper()
-            stmt = stmt.where(SpimexTradingResults.delivery_basis_id == delivery_basis_id)
+            stmt = stmt.where(
+                SpimexTradingResults.delivery_basis_id == delivery_basis_id
+            )
 
-        stmt = stmt.offset(pagination.offset).limit(pagination.limit)
-
+        if pagination is not None:
+            stmt = stmt.offset(pagination.offset).limit(pagination.limit)
+        else:
+            stmt = stmt.limit(100)
         results = await self.session.execute(stmt)
         return list(results.scalars().all())
