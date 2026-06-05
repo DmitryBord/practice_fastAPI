@@ -30,8 +30,8 @@ class SpimexRepository:
     async def get_list(
         self,
         params: TradingResultParams,
+        pagination: PaginationTradingResult,
         dates: DatesQueryParams | None = None,
-        pagination: PaginationTradingResult | None = None,
     ) -> list[SpimexTradingResults]:
 
         stmt = select(SpimexTradingResults).order_by(SpimexTradingResults.date.desc())
@@ -43,22 +43,20 @@ class SpimexRepository:
             )
 
         if params.oil_id:
-            oil_id = params.oil_id.upper()
+            oil_id = params.oil_id.strip().upper()
             stmt = stmt.where(SpimexTradingResults.oil_id == oil_id)
 
         if params.delivery_type_id:
-            delivery_type_id = params.delivery_type_id.upper()
+            delivery_type_id = params.delivery_type_id.strip().upper()
             stmt = stmt.where(SpimexTradingResults.delivery_type_id == delivery_type_id)
 
         if params.delivery_basis_id:
-            delivery_basis_id = params.delivery_basis_id.upper()
+            delivery_basis_id = params.delivery_basis_id.strip().upper()
             stmt = stmt.where(
                 SpimexTradingResults.delivery_basis_id == delivery_basis_id
             )
 
-        if pagination is not None:
-            stmt = stmt.offset(pagination.offset).limit(pagination.limit)
-        else:
-            stmt = stmt.limit(100)
+        stmt = stmt.offset(pagination.offset).limit(pagination.limit)
+
         results = await self.session.execute(stmt)
         return list(results.scalars().all())

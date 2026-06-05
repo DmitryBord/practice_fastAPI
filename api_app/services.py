@@ -7,6 +7,7 @@ from .dependencies import DatesQueryParams, TradingResultParams, PaginationTradi
 from .cache.redis import RedisCacheBackend, RedisHandler
 from .repoositories.spimex_repo import SpimexRepository
 from .schemas.spimex_get import SpimexTradingResultsGet
+from .models.spimex_trading import SpimexTradingResults
 
 from core.database import get_session
 
@@ -14,6 +15,7 @@ from datetime import date
 
 from typing import Annotated
 
+import redis
 import json
 
 
@@ -30,9 +32,13 @@ class SpimexTradingService:
 
     async def _get_cache_or_fetch(
         self, key_parts: list[dict], coro
-    ) -> list[SpimexTradingResultsGet]:
+    ) -> list[SpimexTradingResultsGet | SpimexTradingResults]:
         key: str = RedisHandler.get_key_by_args(*key_parts)
-        cache: str = await self.cache.get(key)
+
+        try:
+            cache: str = await self.cache.get(key)
+        except redis.exceptions.RedisError:
+            cache = ""
 
         if cache:
             return self._adapter_trading_results.validate_json(cache)
@@ -49,7 +55,10 @@ class SpimexTradingService:
         return results
 
     async def get_last_trading_dates(self, count_days: int) -> list[str]:
-        cache: str = await self.cache.get(f"last_dates:{count_days}")
+        try:
+            cache: str = await self.cache.get(f"last_dates:{count_days}")
+        except redis.exceptions.RedisError:
+            cache = ""
 
         if cache:
             result: list[str] = json.loads(cache)
@@ -66,14 +75,18 @@ class SpimexTradingService:
         self,
         params: TradingResultParams,
         dates: DatesQueryParams,
+        pagination: PaginationTradingResult,
     ) -> list[SpimexTradingResultsGet]:
 
         params_dict: dict = params.model_dump(exclude_none=True)
         dates_dict: dict = dates.model_dump(exclude_none=True)
+        paginate_dict: dict = pagination.model_dump(exclude_none=True)
 
         result = await self._get_cache_or_fetch(
-            key_parts=[params_dict, dates_dict],
-            coro=lambda: self.spimex_repo.get_list(params=params, dates=dates),
+            key_parts=[params_dict, dates_dict, paginate_dict],
+            coro=lambda: self.spimex_repo.get_list(
+                params=params, pagination=pagination, dates=dates
+            ),
         )
 
         return result

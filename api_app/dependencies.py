@@ -9,8 +9,8 @@ from typing import Annotated
 
 
 class PaginationTradingResult(BaseModel):
-    offset: int | None = Field(default=0, ge=0)
-    limit: int | None = Field(default=5, gt=0, le=100)
+    offset: int = Field(default=0, ge=0)
+    limit: int = Field(default=5, gt=0, le=100)
 
 
 class TradingResultParams(BaseModel):
@@ -26,22 +26,11 @@ class TradingResultParams(BaseModel):
 
 
 class DatesQueryParams(BaseModel):
-    start_date: date | None = Field(
-        default=None, description="The date must be in format ('YYYY-MM-DD')"
-    )
-    end_date: date | None = Field(
-        default=None, description="The date must be in format ('YYYY-MM-DD')"
-    )
-
-    def is_none(self) -> bool:
-        if self.start_date is None or self.end_date is None:
-            return True
+    start_date: date = Field(description="The date must be in format ('YYYY-MM-DD')")
+    end_date: date = Field(description="The date must be in format ('YYYY-MM-DD')")
 
 
 def validate_dates(dates: Annotated[DatesQueryParams, Depends()]) -> DatesQueryParams:
-    if dates.is_none():
-        return dates
-
     current_date: date = date.today()
 
     if dates.start_date > current_date or dates.end_date > current_date:

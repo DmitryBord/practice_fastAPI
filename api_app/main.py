@@ -26,31 +26,40 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-# TODO: Обработать краевые случаи
+@app.get("/spimex/trading-results", response_model=list[SpimexTradingResultsGet])
+async def get_trading_results(
+    query_params: Annotated[TradingResultParams, Depends()],
+    service: Annotated[SpimexTradingService, Depends()],
+    pagination: Annotated[PaginationTradingResult, Depends()],
+):
+    result = await service.get_trading_results(
+        params=query_params, pagination=pagination
+    )
+
+    return result
+
+
 @app.get("/spimex/trading-results/dates/", response_model=list[str])
 async def get_last_trading_dates(
     service: Annotated[SpimexTradingService, Depends()],
-    count_days: Annotated[int, Query(gt=0)] = 1,
+    count_days: Annotated[int, Query(gt=0, le=100)] = 1,
 ):
     result = await service.get_last_trading_dates(count_days=count_days)
     return result
 
 
-# TODO: Обработать краевые случаи
-@app.get("/spimex/trading-results", response_model=list[SpimexTradingResultsGet])
-async def get_trading_results(
+@app.get(
+    "/spimex/trading-results/dynamics", response_model=list[SpimexTradingResultsGet]
+)
+async def get_dynamic(
     query_params: Annotated[TradingResultParams, Depends()],
     service: Annotated[SpimexTradingService, Depends()],
     dates: Annotated[DatesQueryParams, Depends(validate_dates)],
-    pagination: Annotated[PaginationTradingResult, Depends(PaginationTradingResult)],
+    pagination: Annotated[PaginationTradingResult, Depends()],
 ):
-
-    if dates.is_none():
-        result = await service.get_trading_results(
-            params=query_params, pagination=pagination
-        )
-    else:
-        result = await service.get_dynamic(params=query_params, dates=dates)
+    result = await service.get_dynamic(
+        params=query_params, pagination=pagination, dates=dates
+    )
 
     return result
 
