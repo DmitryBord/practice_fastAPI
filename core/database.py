@@ -18,7 +18,7 @@ DATABASE_URL = URL.create(
     database=settings.db_name,
 )
 
-async_engine = create_async_engine(url=DATABASE_URL, pool_pre_ping=True, echo=True)
+async_engine = create_async_engine(url=DATABASE_URL, pool_pre_ping=True, echo=False)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,

@@ -6,7 +6,7 @@ import curl_cffi
 
 from time import time
 
-from core.init_db import create_table
+# from core.init_db import create_table
 from spimex_app.pipline.pipeline import Pipeline
 
 from spimex_app.service.container import Container
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    await create_table()
+    # await create_table()
 
     with ProcessPoolExecutor() as pool:
         async with curl_cffi.requests.AsyncSession() as session:

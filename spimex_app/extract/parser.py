@@ -41,11 +41,14 @@ async def get_html(url: str, session: curl_cffi.requests.AsyncSession):
     response.raise_for_status()
     return response.text
 
+# Количество страниц
+N: int = 84
+
 
 async def parse_links(
         session: curl_cffi.requests.AsyncSession, last_date: date
 ) -> AsyncGenerator[tuple[list[str], list[str]], None]:
-    for count in range(1, 84):
+    for count in range(1, N):
         links_pdf: list[str] = []
         links_xls: list[str] = []
 

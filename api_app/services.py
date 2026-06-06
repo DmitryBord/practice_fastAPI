@@ -3,11 +3,11 @@ from pydantic import TypeAdapter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .dependencies import DatesQueryParams, TradingResultParams, PaginationTradingResult
-from .cache.redis import RedisCacheBackend, RedisHandler
-from .repoositories.spimex_repo import SpimexRepository
-from .schemas.spimex_get import SpimexTradingResultsGet
-from .models.spimex_trading import SpimexTradingResults
+from api_app.dependencies import DatesQueryParams, TradingResultParams, PaginationTradingResult
+from api_app.cache.redis import RedisCacheBackend, RedisHandler
+from api_app.repoositories.spimex_repo import SpimexRepository
+from api_app.schemas.spimex_get import SpimexTradingResultsGet
+from api_app.models.spimex_trading import SpimexTradingResults
 
 from core.database import get_session
 
